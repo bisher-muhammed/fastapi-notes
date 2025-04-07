@@ -59,11 +59,7 @@ pip install -r requirements.txt
 
 Create a `.env` file in the root directory and define:
 
-```env
-DATABASE_URL=sqlite:///./notes.db
-# For PostgreSQL:
-# DATABASE_URL=postgresql://user:password@localhost/dbname
-```
+
 
 ### 5. Run the Server
 
