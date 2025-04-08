@@ -7,10 +7,12 @@ from passlib.context import CryptContext
 from dotenv import load_dotenv
 import os
 from typing import Optional
+from fastapi.responses import JSONResponse
 
 from app.database import get_db
 from app.models import User
 from app.schemas import UserCreate, UserResponse
+from app.schemas import LoginRequest
 
 # Load environment variables
 load_dotenv()
@@ -59,7 +61,8 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
 # API Router
 router = APIRouter()
 
-@router.post("/register", response_model=UserResponse)
+# Register Endpoint - Status Code 201 Created
+@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def register_user(user: UserCreate, db: Session = Depends(get_db)):
     hashed_password = get_password_hash(user.password)
     db_user = User(user_name=user.user_name, user_email=user.user_email, hashed_password=hashed_password)
@@ -68,10 +71,12 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
     db.refresh(db_user)
     return db_user
 
-@router.post("/login")
-def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.user_email == form_data.username).first()
+# Login Endpoint - Status Code 200 OK
+@router.post("/login", status_code=status.HTTP_200_OK)
+def login(form_data: LoginRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.user_email == form_data.user_email).first()  # Use user_email
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
     access_token = create_access_token(data={"sub": user.user_email})
-    return {"access_token": access_token, "token_type": "bearer"}
+    user_data = UserResponse(user_name=user.user_name, user_email=user.user_email,user_id=user.user_id)
+    return {"access_token": access_token, "token_type": "bearer", "user": user_data}

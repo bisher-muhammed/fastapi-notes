@@ -31,6 +31,11 @@ class UserResponse(BaseModel):
     class Config:
         from_attributes = True  # Pydantic v2 (Use `orm_mode = True` for Pydantic v1)
 
+
+class LoginRequest(BaseModel):
+    user_email: str
+    password: str
+
 class NoteCreate(BaseModel):
     note_title: str
     note_content: str
